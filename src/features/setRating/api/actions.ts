@@ -5,6 +5,7 @@ import { Rating } from '@/entities/rating/model/types';
 import { upsertRating } from '@/entities/rating/api/db';
 import { mapDbRatingToRating } from '@/entities/rating/model/mappers';
 import { withAuth } from '@/shared/lib/auth';
+import { updateTag } from 'next/cache';
 
 export async function setRatingAction(params: {
   subject: Subject;
@@ -24,6 +25,9 @@ export async function setRatingAction(params: {
     });
 
     const rating = mapDbRatingToRating(dbRating);
+
+    updateTag(`user:${userId}:ratings`);
+    updateTag(`ratings:${params.subject.type}:${params.subject.id}`);
 
     return {
       success: true,

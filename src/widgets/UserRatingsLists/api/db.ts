@@ -5,6 +5,7 @@ import { DbBook, mapDbBook } from '@/entities/books/model/mappers';
 import { RatingValue } from '@/entities/rating/model/types';
 import { DbFilm } from '@/entities/films/model/types';
 import { mapDbFilmToFilmWithoutGenres } from '@/entities/films/model/mappers';
+import { cacheLife, cacheTag } from 'next/cache';
 
 export async function getUserBooksWithRating(
   userId: string,
@@ -15,6 +16,11 @@ export async function getUserBooksWithRating(
   totalPages: number;
   totalCount: number;
 }> {
+  'use cache';
+
+  cacheLife('minutes');
+  cacheTag(`user:${userId}:ratings`);
+
   const offset = (page - 1) * limit;
 
   const [rows, countRows] = await Promise.all([
@@ -74,6 +80,11 @@ export async function getUserFilmsWithRating(
   totalPages: number;
   totalCount: number;
 }> {
+  'use cache';
+
+  cacheLife('minutes');
+  cacheTag(`user:${userId}:ratings`);
+
   const offset = (page - 1) * limit;
 
   const [rows, countRows] = await Promise.all([

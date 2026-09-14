@@ -9,6 +9,7 @@ import {
 } from '@/features/wishlist/api/db';
 import { z } from 'zod';
 import { withAuth } from '@/shared/lib/auth';
+import { updateTag } from 'next/cache';
 
 const filmIdSchema = z.string().uuid();
 const bookIdSchema = z.string().uuid();
@@ -34,6 +35,7 @@ export async function addFilmToWishlistAction(filmId: string): Promise<ActionRes
 
   try {
     await addFilmToWishlist(session.payload.userId, parsedFilmId.data);
+    updateTag(`user:${session.payload.userId}:film_wishlist`);
 
     return {
       success: true,
@@ -68,6 +70,8 @@ export async function removeFilmFromWishlistAction(filmId: string): Promise<Acti
 
   try {
     await removeFilmFromWishlist(session.payload.userId, parsedFilmId.data);
+    updateTag(`user:${session.payload.userId}:film_wishlist`);
+
     return {
       success: true,
       data: parsedFilmId.data,
@@ -101,6 +105,8 @@ export async function addBookToWishlistAction(bookId: string): Promise<ActionRes
 
   try {
     await addBookToWishlist(session.payload.userId, parsedBookId.data);
+    updateTag(`user:${session.payload.userId}:book_wishlist`);
+
     return { success: true, data: parsedBookId.data };
   } catch (error) {
     console.error('Failed to add book to wishlist', {
@@ -128,6 +134,8 @@ export async function removeBookFromWishlistAction(bookId: string): Promise<Acti
 
   try {
     await removeBookFromWishlist(session.payload.userId, parsedBookId.data);
+    updateTag(`user:${session.payload.userId}:book_wishlist`);
+
     return { success: true, data: parsedBookId.data };
   } catch (error) {
     console.error('Failed to remove book from wishlist', {

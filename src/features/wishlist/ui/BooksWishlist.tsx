@@ -19,10 +19,6 @@ export async function BookWishlistGrid({
 }: BookWishlistGridProps) {
   const result = await getBookWishlist(userId, limit, page);
 
-  if (!result) {
-    return <div>Необходимо авторизоваться.</div>;
-  }
-
   if (result.books.length === 0) {
     return <WishlistEmptyState type="book" />;
   }

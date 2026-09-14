@@ -1,14 +1,13 @@
-import { verifySession } from '@/shared/lib/auth';
 import { getUserBookWishlist, getUserFilmWishlist } from '@/features/wishlist/api/db';
 import { mapFilms } from '@/entities/films/model/mappers';
 import { mapDbBook } from '@/entities/books/model/mappers';
+import { cacheLife, cacheTag } from 'next/cache';
 
 export async function getFilmWishlist(userId: string, limit = 25, page = 1) {
-  const session = await verifySession();
+  'use cache';
 
-  if (session.status === 'unauthenticated') {
-    return null;
-  }
+  cacheLife('minutes');
+  cacheTag(`user:${userId}:film_wishlist`);
 
   const result = await getUserFilmWishlist(userId, limit, page);
 
@@ -20,11 +19,10 @@ export async function getFilmWishlist(userId: string, limit = 25, page = 1) {
 }
 
 export async function getBookWishlist(userId: string, limit = 25, page = 1) {
-  const session = await verifySession();
+  'use cache';
 
-  if (session.status === 'unauthenticated') {
-    return null;
-  }
+  cacheLife('minutes');
+  cacheTag(`user:${userId}:book_wishlist`);
 
   const result = await getUserBookWishlist(userId, limit, page);
 

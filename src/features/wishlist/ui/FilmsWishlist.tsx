@@ -18,9 +18,6 @@ export async function FilmWishlistGrid({
   canRemove = false,
 }: FilmWishlistGridProps) {
   const result = await getFilmWishlist(userId, limit, page);
-  if (!result) {
-    return <div>Необходимо авторизоваться.</div>;
-  }
 
   if (result.films.length === 0) {
     return <WishlistEmptyState type="film" />;

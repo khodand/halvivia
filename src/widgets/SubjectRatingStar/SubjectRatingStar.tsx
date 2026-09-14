@@ -6,7 +6,6 @@ import { RatingWithUser } from '@/entities/rating/model/types';
 import { getRatingColorClass } from '@/entities/rating/lib/utils';
 import { Subject } from '@/shared/model';
 import { StarIcon } from '@/shared/ui/icons';
-import { useRouter } from 'next/navigation';
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/shared/ui/hover-card/HoverCard';
 
