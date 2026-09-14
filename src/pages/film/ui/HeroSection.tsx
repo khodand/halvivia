@@ -25,7 +25,7 @@ export async function HeroSection({ film }: HeroSectionProps) {
   const session = await verifySession();
 
   const isInWishlist =
-    session.status === 'authenticated'
+    session.status !== 'unauthenticated'
       ? await isFilmInWishlist(session.payload.userId, film.id)
       : false;
 

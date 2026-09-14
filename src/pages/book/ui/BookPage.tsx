@@ -32,7 +32,7 @@ export async function BookPageContent({ params }: BookPageProps) {
 
   const descriptionHtml = book.description ? sanitizeHtml(book.description) : null;
   const isInWishlist =
-    session.status === 'authenticated'
+    session.status !== 'unauthenticated'
       ? await isBookInWishlist(session.payload.userId, book.id)
       : false;
 
