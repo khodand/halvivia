@@ -16,6 +16,7 @@ import { getFilmRefById } from '@/entities/films/lib/utils';
 import { Film } from '@/entities/films/model/types';
 
 import { SetRatingRadio } from '@/features/setRating/ui/SetRatingRadio';
+import { useCurrentUserStore } from '@/entities/user/model/currentUserStore';
 
 export function parseKinopoiskFilmId(url: string): number | null {
   if (typeof url !== 'string') return null;
@@ -25,11 +26,7 @@ export function parseKinopoiskFilmId(url: string): number | null {
   return match ? Number(match[1]) : null;
 }
 
-type Props = {
-  userId: string;
-};
-
-export function KinopoiskForm({ userId }: Props) {
+export function KinopoiskForm() {
   const [currentRef, setCurrentRef] = useState('');
   const [keyword, setKeyword] = useState('');
   const [isValidOrEmpty, setValidOrEmpty] = useState(true);
@@ -39,6 +36,8 @@ export function KinopoiskForm({ userId }: Props) {
   const [rating, setRating] = useState<number | null>(null);
 
   const { data, loading, error, search } = useSearchByKeyword();
+
+  const userId = useCurrentUserStore((state) => state.currentUser?.id);
 
   const addFilm = (filmId: number) => {
     startTransition(async () => {
@@ -94,7 +93,7 @@ export function KinopoiskForm({ userId }: Props) {
                 type: 'film',
                 id: addedFilm.id,
               }}
-              userId={userId}
+              userId={userId || ''}
               buttonVariant="light"
               handleSuccessChange={setRating}
             />
