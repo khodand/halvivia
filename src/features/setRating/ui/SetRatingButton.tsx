@@ -13,12 +13,12 @@ export type Props = {
 function getValueClass(value: number, active: boolean) {
   switch (value) {
     case -1:
-      return active ? 'text-error' : 'hover:text-error';
+      return active ? 'text-red-base' : 'hover:text-red-base';
     case 0:
-      return active ? 'text-text-primary' : 'hover:text-text-primary';
+      return active ? 'text-yellow-base' : 'hover:text-yellow-base';
     case 1:
     case 2:
-      return active ? 'text-success' : 'hover:text-success';
+      return active ? 'text-green-base' : 'hover:text-green-base';
     default:
       return '';
   }

@@ -5,7 +5,7 @@ import { cacheLife } from 'next/cache';
 import { DbFilm, DbFilmWithGenres, DbGenre, Film } from '@/entities/films/model/types';
 import { pool, sql } from '@/shared/lib/db';
 
-export async function addFilm(film: Film): Promise<string> {
+export async function addFilm(film: Film): Promise<Film> {
   const client = await pool.connect();
 
   try {
@@ -115,7 +115,7 @@ export async function addFilm(film: Film): Promise<string> {
 
     await client.query('COMMIT');
 
-    return filmId;
+    return { ...film, id: filmId };
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;

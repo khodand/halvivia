@@ -1,6 +1,6 @@
 import { Film } from '@/entities/films/model/types';
 import Poster from '@/pages/film/ui/Poster';
-import { ArrowIcon, StarIcon } from '@/shared/ui/icons';
+import { ArrowIcon } from '@/shared/ui/icons';
 import Description from '@/pages/film/ui/Description';
 import Info from '@/pages/film/ui/Info';
 import RatingStarButton from '@/features/setRating/ui/RatingStarButton';

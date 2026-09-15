@@ -1,5 +1,4 @@
 import { FilmSearchByKeywordItem } from '@/features/addKinopoiskFilm/model/types';
-import { addKinopoiskFilmAction } from '@/features/addKinopoiskFilm/api/actions';
 import { Icon } from '@/shared/ui/icon';
 import Image from 'next/image';
 

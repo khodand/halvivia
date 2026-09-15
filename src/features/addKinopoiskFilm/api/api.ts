@@ -8,6 +8,7 @@ import {
 import { KinopoiskFilmSchema } from '@/features/addKinopoiskFilm/model/schemas';
 import { mapKinopoiskFilmToFilm } from '@/features/addKinopoiskFilm/model/mappers';
 import { imagekitClient } from '@/shared/api/imagekit/client';
+import { Film } from '@/entities/films/model/types';
 
 export async function getKinopoiskFilmById(id: number = 41519): Promise<KinopoiskFilm> {
   try {
@@ -40,7 +41,7 @@ export async function getKinopoiskFilmById(id: number = 41519): Promise<Kinopois
 }
 
 //переделать через edge handlers? или перенести на клиент, но тогда будет больше перенаправлений или хотебя таймер сделать
-export async function addFilmByKinopoiskId(id: number): Promise<string> {
+export async function addFilmByKinopoiskId(id: number): Promise<Film> {
   const kFilm = await getKinopoiskFilmById(id);
 
   let film = mapKinopoiskFilmToFilm(kFilm);
@@ -55,7 +56,7 @@ export async function addFilmByKinopoiskId(id: number): Promise<string> {
     if (typeof res.filePath == 'string') film.posterUrl = res.filePath;
   } catch (err) {
     film = { ...film, posterUrl: 'defaultposter.png' };
-    console.log('не вышло загрузить постер');
+    console.log('не вышло загрузить постер', err);
   }
 
   return addFilm(film);

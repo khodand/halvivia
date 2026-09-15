@@ -7,8 +7,10 @@ import { ROUTES } from '@/shared/config';
 import { revalidatePath } from 'next/cache';
 import { FilmSearchByKeywordResponseSchema } from '@/features/addKinopoiskFilm/model/schemas';
 import { FilmSearchByKeywordItem } from '@/features/addKinopoiskFilm/model/types';
+import { Film } from '@/entities/films/model/types';
+import { ActionResult } from '@/shared/model';
 
-export async function addKinopoiskFilmAction(id: number) {
+export async function addKinopoiskFilmAction(id: number): Promise<ActionResult<Film>> {
   const controller = new AbortController();
   const session = await withAuth();
 
@@ -17,23 +19,23 @@ export async function addKinopoiskFilmAction(id: number) {
   }
 
   if (session.payload.role !== 'MEMBER') {
-    return { success: false, error: 'Unauthorized' };
+    return { success: false, error: 'UNAUTHORIZED' };
   }
 
   setTimeout(() => controller.abort(), 15000);
   try {
-    const filmId = await addFilmByKinopoiskId(id);
+    const film = await addFilmByKinopoiskId(id);
     revalidatePath(ROUTES.CINEMA);
     return {
       success: true,
-      filmId: filmId,
+      data: film,
     } as const;
   } catch (err) {
     console.error(err);
 
     return {
       success: false,
-      error: 'FAILED_TO_CREATE_FILM',
+      error: 'DB_ERROR',
     } as const;
   }
 }
