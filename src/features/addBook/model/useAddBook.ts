@@ -1,14 +1,11 @@
 'use client';
 
-import type { BookSearchResultPreview, BookSectionId } from '@/entities/books/model/types';
+import type { Book, BookSearchResultPreview, BookSectionId } from '@/entities/books/model/types';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+
 import { addBookAction } from '../api/actions';
 import type { AddBookStatus } from './types';
-
-type UseAddBookParams = {
-  onAdded?: () => void;
-};
 
 function getAddBookErrorMessage(
   error: 'UNAUTHORIZED' | 'BOOK_ALREADY_EXISTS' | 'BOOK_NOT_FOUND' | 'RATE_LIMITED' | 'ADD_FAILED',
@@ -32,14 +29,21 @@ function getAddBookErrorMessage(
   return 'Не удалось добавить книгу';
 }
 
-export function useAddBook({ onAdded }: UseAddBookParams) {
+export function useAddBook() {
   const router = useRouter();
-  const [status, setStatus] = useState<AddBookStatus>({ type: 'idle' });
+
+  const [status, setStatus] = useState<AddBookStatus>({
+    type: 'idle',
+  });
+
   const [isAdding, setIsAdding] = useState(false);
 
   const addSelectedBook = useCallback(
-    async (selectedBook: BookSearchResultPreview | null, selectedSections: BookSectionId[]) => {
-      if (!selectedBook) return;
+    async (
+      selectedBook: BookSearchResultPreview | null,
+      selectedSections: BookSectionId[],
+    ): Promise<Book | null> => {
+      if (!selectedBook) return null;
 
       setStatus({ type: 'idle' });
       setIsAdding(true);
@@ -53,23 +57,37 @@ export function useAddBook({ onAdded }: UseAddBookParams) {
         });
 
         if (response.success) {
-          setStatus({ type: 'success', message: 'Книга добавлена', bookId: response.bookId });
+          setStatus({
+            type: 'success',
+            message: 'Книга добавлена',
+            bookId: response.bookId,
+          });
+
           router.refresh();
-          onAdded?.();
-          return;
+
+          return response.book;
         }
 
         if (response.error === 'BOOK_ALREADY_EXISTS' && response.bookId) {
-          setStatus({ type: 'duplicate', bookId: response.bookId });
-          return;
+          setStatus({
+            type: 'duplicate',
+            bookId: response.bookId,
+          });
+
+          return null;
         }
 
-        setStatus({ type: 'error', message: getAddBookErrorMessage(response.error) });
+        setStatus({
+          type: 'error',
+          message: getAddBookErrorMessage(response.error),
+        });
+
+        return null;
       } finally {
         setIsAdding(false);
       }
     },
-    [onAdded, router],
+    [router],
   );
 
   const resetStatus = useCallback(() => {

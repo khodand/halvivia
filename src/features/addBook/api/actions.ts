@@ -3,6 +3,7 @@
 import { addBookOrGetExisting } from '@/entities/books/api/db';
 import type {
   AddBookSelectionInput,
+  Book,
   BookSearchResult,
   BookSearchResultPreview,
   BookSectionId,
@@ -29,7 +30,7 @@ type SearchBooksResult =
     };
 
 type AddBookResult =
-  | { success: true; bookId: string }
+  | { success: true; bookId: string; book: Book }
   | {
       success: false;
       error:
@@ -109,7 +110,10 @@ export async function addBookAction(input: AddBookSelectionInput): Promise<AddBo
   }
 
   if (session.payload.role !== 'MEMBER') {
-    return { success: false, error: 'UNAUTHORIZED' };
+    return {
+      success: false,
+      error: 'UNAUTHORIZED',
+    };
   }
 
   const rateLimit = checkRateLimit({
@@ -119,14 +123,20 @@ export async function addBookAction(input: AddBookSelectionInput): Promise<AddBo
   });
 
   if (!rateLimit.success) {
-    return { success: false, error: 'RATE_LIMITED' };
+    return {
+      success: false,
+      error: 'RATE_LIMITED',
+    };
   }
 
   try {
     const externalBook = await getExternalBookBySelection(input);
 
     if (!externalBook) {
-      return { success: false, error: 'BOOK_NOT_FOUND' };
+      return {
+        success: false,
+        error: 'BOOK_NOT_FOUND',
+      };
     }
 
     const { book, created } = await addBookOrGetExisting(
@@ -138,14 +148,26 @@ export async function addBookAction(input: AddBookSelectionInput): Promise<AddBo
     );
 
     if (!created) {
-      return { success: false, error: 'BOOK_ALREADY_EXISTS', bookId: book.id };
+      return {
+        success: false,
+        error: 'BOOK_ALREADY_EXISTS',
+        bookId: book.id,
+      };
     }
 
     revalidatePath(ROUTES.LIBRARY);
 
-    return { success: true, bookId: book.id };
+    return {
+      success: true,
+      bookId: book.id,
+      book,
+    };
   } catch (error) {
     console.error(error);
-    return { success: false, error: 'ADD_FAILED' };
+
+    return {
+      success: false,
+      error: 'ADD_FAILED',
+    };
   }
 }

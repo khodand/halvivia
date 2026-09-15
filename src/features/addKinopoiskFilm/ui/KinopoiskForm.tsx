@@ -15,8 +15,8 @@ import FilmRatingPreview from '@/features/addKinopoiskFilm/ui/filmRatingPreview'
 import { getFilmRefById } from '@/entities/films/lib/utils';
 import { Film } from '@/entities/films/model/types';
 
-import { SetRatingRadio } from '@/features/setRating/ui/SetRatingRadio';
 import { useCurrentUserStore } from '@/entities/user/model/currentUserStore';
+import { AddedSubjectRating } from '@/entities/rating/ui/AddedSubjectRating';
 
 export function parseKinopoiskFilmId(url: string): number | null {
   if (typeof url !== 'string') return null;
@@ -33,7 +33,6 @@ export function KinopoiskForm() {
   const [isPending, startTransition] = useTransition();
 
   const [addedFilm, setAddedFilm] = useState<Film | null>(null);
-  const [rating, setRating] = useState<number | null>(null);
 
   const { data, loading, error, search } = useSearchByKeyword();
 
@@ -47,7 +46,6 @@ export function KinopoiskForm() {
         return;
       }
 
-      setRating(null);
       setAddedFilm(res.data);
     });
   };
@@ -83,31 +81,22 @@ export function KinopoiskForm() {
     return (
       <div className="text-text-inverse flex w-full min-w-100 flex-col items-center gap-8 md:w-[22vw]">
         <StatusBlock status={true} filmRef={getFilmRefById(addedFilm.id)} />
-
-        {rating === null && (
-          <div className="flex flex-col items-center gap-3">
-            <span className="text-text-inverse-200 text-sm md:text-base">Оцени фильм</span>
-
-            <SetRatingRadio
-              subject={{
-                type: 'film',
-                id: addedFilm.id,
-              }}
-              userId={userId || ''}
-              buttonVariant="light"
-              handleSuccessChange={setRating}
-            />
-          </div>
+        {userId && (
+          <AddedSubjectRating
+            userId={userId}
+            subject={{
+              type: 'film',
+              id: addedFilm.id,
+            }}
+          >
+            <FilmRatingPreview film={addedFilm} />
+          </AddedSubjectRating>
         )}
-
-        <FilmRatingPreview film={addedFilm} />
-
         <Button
           type="button"
           variant="primaryOnLight"
           onClick={() => {
             setAddedFilm(null);
-            setRating(null);
             setCurrentRef('');
             setKeyword('');
           }}
