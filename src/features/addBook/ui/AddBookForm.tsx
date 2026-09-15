@@ -16,13 +16,12 @@ import { BookSectionPicker } from './BookSectionPicker';
 import { SearchResultsPanel } from './SearchResultsPanel';
 import { AddedSubjectRating } from '@/entities/rating/ui/AddedSubjectRating';
 import BookRatingPreview from '@/features/addBook/ui/BookRatingPreview';
+import { useCurrentUserStore } from '@/entities/user/model/currentUserStore';
 
-type AddBookFormProps = {
-  userId: string;
-};
-
-export function AddBookForm({ userId }: AddBookFormProps) {
+export function AddBookForm() {
   const [addedBook, setAddedBook] = useState<Book | null>(null);
+
+  const userId = useCurrentUserStore((state) => state.currentUser?.id);
 
   const {
     query,
@@ -85,16 +84,17 @@ export function AddBookForm({ userId }: AddBookFormProps) {
           }}
         />
 
-        <AddedSubjectRating
-          userId={userId}
-          subject={{
-            type: 'book',
-            id: addedBook.id,
-          }}
-        >
-          <BookRatingPreview book={addedBook} />
-        </AddedSubjectRating>
-
+        {userId && (
+          <AddedSubjectRating
+            userId={userId}
+            subject={{
+              type: 'book',
+              id: addedBook.id,
+            }}
+          >
+            <BookRatingPreview book={addedBook} />
+          </AddedSubjectRating>
+        )}
         <Button
           type="button"
           variant="primaryOnLight"

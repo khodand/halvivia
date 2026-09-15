@@ -6,8 +6,6 @@ import { Button } from '@/shared/ui/Button';
 import { AddIcon } from '@/shared/ui/icons';
 import { AddBookForm } from './AddBookForm';
 
-const SUCCESS_CLOSE_DELAY_MS = 2000;
-
 export function AddBookDialogButton() {
   const [isOpen, setIsOpen] = useState(false);
   const closeTimerRef = useRef<number | null>(null);
@@ -24,14 +22,6 @@ export function AddBookDialogButton() {
     setIsOpen(false);
   }
 
-  function handleAdded() {
-    clearCloseTimer();
-    closeTimerRef.current = window.setTimeout(() => {
-      setIsOpen(false);
-      closeTimerRef.current = null;
-    }, SUCCESS_CLOSE_DELAY_MS);
-  }
-
   useEffect(() => clearCloseTimer, []);
 
   return (
@@ -43,7 +33,7 @@ export function AddBookDialogButton() {
         onClose={closeDialog}
         className="max-w-105 gap-5 px-5 py-10 md:px-8"
       >
-        <AddBookForm onAdded={handleAdded} />
+        <AddBookForm />
       </Dialog>
       <Button
         type="button"
