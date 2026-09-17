@@ -43,20 +43,38 @@ export async function getKinopoiskFilmById(id: number = 41519): Promise<Kinopois
 //переделать через edge handlers? или перенести на клиент, но тогда будет больше перенаправлений или хотебя таймер сделать
 export async function addFilmByKinopoiskId(id: number): Promise<Film> {
   const kFilm = await getKinopoiskFilmById(id);
+  const film = mapKinopoiskFilmToFilm(kFilm);
 
-  let film = mapKinopoiskFilmToFilm(kFilm);
-  let res = null;
-  // пытаемся подгрузить постер
-  try {
-    res = await imagekitClient.files.upload({
+  const [posterResult, coverResult] = await Promise.allSettled([
+    imagekitClient.files.upload({
       file: film.posterUrl,
       fileName: film.kinopoiskId.toString(),
       folder: '/posters',
-    });
-    if (typeof res.filePath == 'string') film.posterUrl = res.filePath;
-  } catch (err) {
-    film = { ...film, posterUrl: 'defaultposter.png' };
-    console.log('не вышло загрузить постер', err);
+    }),
+
+    imagekitClient.files.upload({
+      file: film.coverUrl,
+      fileName: film.kinopoiskId.toString(),
+      folder: '/covers',
+    }),
+  ]);
+
+  if (posterResult.status === 'fulfilled') {
+    if (typeof posterResult.value.filePath === 'string') {
+      film.posterUrl = posterResult.value.filePath;
+    }
+  } else {
+    film.posterUrl = 'defaultposter.png';
+    console.log('Не вышло загрузить постер', posterResult.reason);
+  }
+
+  if (coverResult.status === 'fulfilled') {
+    if (typeof coverResult.value.filePath === 'string') {
+      film.coverUrl = coverResult.value.filePath;
+    }
+  } else {
+    film.coverUrl = 'defaultcover.png';
+    console.log('Не вышло загрузить широкий постер', coverResult.reason);
   }
 
   return addFilm(film);

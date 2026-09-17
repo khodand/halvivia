@@ -13,6 +13,7 @@ export function mapKinopoiskFilmToFilm(film: KinopoiskFilm): Film {
     nameOriginal: film.nameOriginal,
 
     posterUrl: film.posterUrl,
+    coverUrl: film.coverUrl || film.posterUrl,
     posterUrlPreview: film.posterUrlPreview,
 
     ratingImdb: film.ratingImdb,

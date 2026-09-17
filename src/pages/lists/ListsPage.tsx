@@ -42,6 +42,7 @@ export async function ListsPage({ searchParams }: Props) {
                 posterUrl={film.posterUrl}
                 ratingAvg={film.ratingAvg}
                 variant={'grid'}
+                coverUrl={film.coverUrl}
               />
             ))}
           </div>

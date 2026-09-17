@@ -18,7 +18,7 @@ export function mapDbFilmToFilmWithoutGenres(db: DbFilm): FilmWithoutGenres {
     nameRu: db.name_ru,
     nameEn: db.name_en,
     nameOriginal: db.name_original,
-
+    coverUrl: db.cover_url == '/posters/default_cover' ? db.poster_url : db.cover_url,
     posterUrl: db.poster_url,
     posterUrlPreview: db.poster_url_preview,
 
@@ -64,7 +64,7 @@ export function mapDbFilmWithGenresToFilm(db: DbFilmWithGenres): Film {
     nameRu: db.name_ru,
     nameEn: db.name_en,
     nameOriginal: db.name_original,
-
+    coverUrl: db.cover_url == '/posters/default_cover' ? db.poster_url : db.cover_url,
     posterUrl: db.poster_url,
     posterUrlPreview: db.poster_url_preview,
 
@@ -109,6 +109,7 @@ export function mapDbFilmToFilmCardProps(film: DbFilm): FilmCardProps {
     name: film.name_ru || film.name_en || film.name_original || 'Без названия',
     posterUrl: film.poster_url,
     ratingAvg: Number(film.rating_avg),
+    coverUrl: film.cover_url !== '/posters/default_cover' ? film.cover_url : film.poster_url,
   };
 }
 

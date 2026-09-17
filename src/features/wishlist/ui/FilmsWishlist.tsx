@@ -34,6 +34,7 @@ export async function FilmWishlistGrid({
             <FilmCard
               id={film.id}
               name={film.name}
+              coverUrl={film.coverUrl}
               posterUrl={film.posterUrl}
               ratingAvg={film.ratingAvg}
               variant="grid"

@@ -37,7 +37,8 @@ export async function addFilm(film: Film): Promise<Film> {
         end_year,
         serial,
         short_film,
-        completed
+        completed,
+        cover_url
       )
       VALUES (
         $1, $2, $3,
@@ -53,7 +54,7 @@ export async function addFilm(film: Film): Promise<Film> {
         $20,
         $21,
         $22, $23,
-        $24
+        $24, $25
       )
       RETURNING id
       `,
@@ -82,6 +83,7 @@ export async function addFilm(film: Film): Promise<Film> {
         film.serial,
         film.shortFilm,
         film.completed,
+        film.coverUrl,
       ],
     );
 

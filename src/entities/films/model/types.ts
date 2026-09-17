@@ -13,6 +13,7 @@ export interface Film {
   nameEn: string | null;
   nameOriginal: string | null;
   posterUrl: string;
+  coverUrl: string;
   posterUrlPreview: string;
   ratingImdb: number | string | null;
   ratingKinopoisk: number | null;
@@ -31,7 +32,6 @@ export interface Film {
   shortFilm: boolean | null;
   completed: boolean | null;
   genres: Genre[];
-
   ratingAvg: number | null;
   ratingCount: number | null;
 }
@@ -51,6 +51,7 @@ export type DbFilm = {
   name_original: string | null;
 
   poster_url: string;
+  cover_url: string;
   poster_url_preview: string;
 
   rating_imdb: number | null;

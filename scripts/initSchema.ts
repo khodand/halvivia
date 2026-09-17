@@ -87,7 +87,8 @@ export async function createFilmsTable() {
       serial                      BOOLEAN,
       short_film                  BOOLEAN,
       completed                   BOOLEAN,
-      created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      cover_url                   TEXT    NOT NULL DEFAULT '/cover/default'
     );
   `;
 

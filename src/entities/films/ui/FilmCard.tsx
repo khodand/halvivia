@@ -13,6 +13,7 @@ export type FilmCardProps = {
   className?: string;
   hoverScale?: boolean;
   children?: React.ReactNode;
+  coverUrl: string;
 };
 
 const variants = {
@@ -28,6 +29,7 @@ const sizesByVariant = {
 export function FilmCard({
   id = 'e9339093-33db-4dc8-b465-381efbf712eb',
   posterUrl = '/posters/1143242_FgX7h_vrI',
+  coverUrl,
   name = 'Джентльмены ',
   ratingAvg = 0,
   variant = 'fixed',
@@ -51,11 +53,11 @@ export function FilmCard({
         {children}
         <Image
           urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
-          alt="alt"
+          alt={`${name}`}
           className={`aspect-video h-full w-full object-cover object-center`}
           width={166}
           height={93}
-          src={posterUrl}
+          src={coverUrl || posterUrl}
           loading={'lazy'}
           sizes={sizesByVariant[variant]}
         ></Image>

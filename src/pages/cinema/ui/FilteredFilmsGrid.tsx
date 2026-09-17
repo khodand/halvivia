@@ -52,6 +52,7 @@ export function FilteredFilmsGrid({ genreIds, limit = 24 }: FilmsGridProps) {
             name={film.nameRu}
             posterUrl={film.posterUrl}
             ratingAvg={film.ratingAvg}
+            coverUrl={film.coverUrl}
             variant={'grid'}
           />
         ))}
