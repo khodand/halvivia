@@ -52,3 +52,14 @@ export async function getComments({
 
   return rows;
 }
+
+export async function getCommentById(id: string): Promise<DbComment | null> {
+  const rows = (await sql`
+    SELECT *
+    FROM comments
+    WHERE id = ${id}
+    LIMIT 1;
+  `) as DbComment[];
+
+  return rows[0] ?? null;
+}

@@ -1,7 +1,8 @@
-import { createWishListsTables } from './initSchema';
+import 'dotenv/config';
+import { createEventsTable } from './initSchema';
 
 async function main() {
-  await createWishListsTables();
+  await createEventsTable();
 }
 
 const isDirectRun =

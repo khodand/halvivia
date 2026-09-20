@@ -6,6 +6,7 @@ import { upsertRating } from '@/entities/rating/api/db';
 import { mapDbRatingToRating } from '@/entities/rating/model/mappers';
 import { withAuth } from '@/shared/lib/auth';
 import { updateTag } from 'next/cache';
+import { tryCreateActivityEvent } from '@/entities/activity/api/queries';
 
 export async function setRatingAction(params: {
   subject: Subject;
@@ -28,6 +29,13 @@ export async function setRatingAction(params: {
 
     updateTag(`user:${userId}:ratings`);
     updateTag(`ratings:${params.subject.type}:${params.subject.id}`);
+
+    await tryCreateActivityEvent({
+      actorId: userId,
+      eventType: 'subject.rated',
+      subject: params.subject,
+      metadata: { ratingValue: rating.value },
+    });
 
     return {
       success: true,

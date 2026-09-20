@@ -98,6 +98,7 @@ export async function upsertRating({
     client.release();
   }
 }
+
 export async function getRatingsBySubject(params: {
   subject: Subject;
   limit?: number;

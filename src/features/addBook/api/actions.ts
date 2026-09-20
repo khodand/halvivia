@@ -16,6 +16,7 @@ import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { checkRateLimit } from '@/shared/lib/rateLimit';
 import { getExternalBookBySelection, searchExternalBooks } from './bookSearch';
+import { tryCreateActivityEvent } from '@/entities/activity/api/queries';
 
 type SearchBooksResult =
   | { success: true; books: BookSearchResultPreview[] }
@@ -156,6 +157,12 @@ export async function addBookAction(input: AddBookSelectionInput): Promise<AddBo
     }
 
     revalidatePath(ROUTES.LIBRARY);
+
+    await tryCreateActivityEvent({
+      eventType: 'subject.created',
+      subject: { type: 'book', id: book.id },
+      actorId: session.payload.userId,
+    });
 
     return {
       success: true,

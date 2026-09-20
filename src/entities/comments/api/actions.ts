@@ -7,6 +7,8 @@ import { Comment } from '@/entities/comments/model/types';
 import { mapDbCommentToComment } from '@/entities/comments/model/mappers';
 import { CreateCommentSchema } from '@/entities/comments/model/schemas';
 import { ActionResult } from '@/shared/model';
+import { createCommentPreview } from '@/entities/comments/utils';
+import { tryCreateActivityEvent } from '@/entities/activity/api/queries';
 
 export async function createCommentAction(
   input: CreateCommentInput,
@@ -15,6 +17,7 @@ export async function createCommentAction(
 
   if (!parsed.success) {
     console.error(parsed.error);
+
     return {
       success: false,
       error: 'VALIDATION_ERROR',
@@ -36,9 +39,28 @@ export async function createCommentAction(
       userId: session.payload.userId,
     });
 
+    const comment = mapDbCommentToComment(dbComment);
+
+    await tryCreateActivityEvent({
+      eventType: 'subject.commented',
+      actorId: session.payload.userId,
+      subject: {
+        id: comment.entityId,
+        type: comment.entityType,
+      },
+      metadata: {
+        commentId: comment.id,
+        commentPreview: createCommentPreview(comment.content),
+
+        ...(comment.parentId && {
+          parentCommentId: comment.parentId,
+        }),
+      },
+    });
+
     return {
       success: true,
-      data: mapDbCommentToComment(dbComment),
+      data: comment,
     };
   } catch (error) {
     console.error('Failed to create comment', error);

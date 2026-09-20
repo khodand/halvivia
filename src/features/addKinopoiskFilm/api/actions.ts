@@ -9,6 +9,7 @@ import { FilmSearchByKeywordResponseSchema } from '@/features/addKinopoiskFilm/m
 import { FilmSearchByKeywordItem } from '@/features/addKinopoiskFilm/model/types';
 import { Film } from '@/entities/films/model/types';
 import { ActionResult } from '@/shared/model';
+import { tryCreateActivityEvent } from '@/entities/activity/api/queries';
 
 export async function addKinopoiskFilmAction(id: number): Promise<ActionResult<Film>> {
   const controller = new AbortController();
@@ -26,6 +27,13 @@ export async function addKinopoiskFilmAction(id: number): Promise<ActionResult<F
   try {
     const film = await addFilmByKinopoiskId(id);
     revalidatePath(ROUTES.CINEMA);
+
+    await tryCreateActivityEvent({
+      eventType: 'subject.created',
+      subject: { type: 'film', id: film.id },
+      actorId: session.payload.userId,
+    });
+
     return {
       success: true,
       data: film,

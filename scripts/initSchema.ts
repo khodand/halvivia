@@ -367,3 +367,49 @@ export async function createWishListsTables() {
       ON user_book_wishlist (user_id, created_at DESC);
   `;
 }
+
+export async function createEventsTable() {
+  await sql`
+    CREATE TABLE activity_events (
+                                   id  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+                                   actor_id UUID NOT NULL
+                                     REFERENCES users(id)
+                                       ON DELETE CASCADE,
+
+                                   event_type TEXT NOT NULL,
+
+                                   subject_type TEXT NOT NULL
+                                     CHECK (subject_type IN ('film', 'book')),
+
+                                   subject_id UUID NOT NULL,
+
+                                   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+                                   visibility TEXT NOT NULL DEFAULT 'public'
+                                     CHECK (visibility IN ('public', 'followers', 'private')),
+
+                                   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`
+    CREATE INDEX activity_events_public_feed_idx
+      ON activity_events (created_at DESC, id DESC)
+      WHERE visibility = 'public';
+  `;
+
+  await sql`
+    CREATE INDEX activity_events_actor_idx
+      ON activity_events (actor_id, created_at DESC, id DESC);
+  `;
+
+  await sql`
+    CREATE INDEX activity_events_subject_idx
+      ON activity_events (
+                          subject_type,
+                          subject_id,
+                          created_at DESC
+        );
+  `;
+}
