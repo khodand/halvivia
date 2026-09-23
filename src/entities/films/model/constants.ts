@@ -29,8 +29,8 @@ export const FILM_TYPE_OPTIONS = [
 export const FILM_SORT_MAP = {
   newest: 'created_at DESC',
   oldest: 'created_at ASC',
-  rating_desc: 'rating_avg DESC NULLS LAST',
-  rating_asc: 'rating_avg ASC NULLS LAST',
+  rating_desc: 'halva_score DESC NULLS LAST, created_at DESC',
+  rating_asc: 'halva_score ASC NULLS LAST, created_at DESC',
   year_desc: 'year DESC NULLS LAST',
   year_asc: 'year ASC NULLS LAST',
 } as const;

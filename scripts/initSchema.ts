@@ -486,6 +486,38 @@ export async function createGamesTable() {
   `;
 }
 
+export async function addHalvaScoreColumns() {
+  await sql`
+    ALTER TABLE films
+    ADD COLUMN IF NOT EXISTS halva_score NUMERIC
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS films_halva_score_idx
+    ON films (halva_score DESC)
+  `;
+
+  await sql`
+    ALTER TABLE books
+    ADD COLUMN IF NOT EXISTS halva_score NUMERIC
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS books_halva_score_idx
+    ON books (halva_score DESC)
+  `;
+
+  await sql`
+    ALTER TABLE games
+    ADD COLUMN IF NOT EXISTS halva_score NUMERIC
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS games_halva_score_idx
+    ON games (halva_score DESC)
+  `;
+}
+
 export async function allowGameActivitySubject() {
   await sql`
     DO $$
