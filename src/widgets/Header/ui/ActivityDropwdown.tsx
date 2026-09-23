@@ -4,7 +4,7 @@ import { ActivityDropdownClient } from '@/widgets/Header/ui/ActivityDropdownClie
 export async function ActivityDropdown() {
   return (
     <ActivityDropdownClient>
-      <ActivityFeed limit={10} />
+      <ActivityFeed limit={25} />
     </ActivityDropdownClient>
   );
 }

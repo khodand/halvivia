@@ -27,7 +27,7 @@ export function CommentNode({
               {comment.author.name}
             </h3>
           </UserLink>
-          <p className={'text-sm leading-6 lg:text-base'}>{comment.content}</p>
+          <p className={'text-sm leading-6 whitespace-pre-line lg:text-base'}>{comment.content}</p>
           <div className={'text-text-inverse-500 flex flex-row gap-6 text-xs lg:text-sm'}>
             <p>{formatDate(comment.createdAt)}</p>
             <button

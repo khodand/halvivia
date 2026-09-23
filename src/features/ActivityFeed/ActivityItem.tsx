@@ -2,7 +2,7 @@ import { ActivityFeedItem } from '@/entities/activity/model/types';
 import UserAvatarMini from '@/entities/user/ui/UserAvatarMini';
 import UserLink from '@/pages/user/ui/UserLink';
 import Link from 'next/link';
-import { getSubjectRef } from '@/shared/lib/utils';
+import { formatRelativeTime, getSubjectRef } from '@/shared/lib/utils';
 import { getRatingColorClass } from '@/entities/rating/lib/utils';
 
 type ActivityItemProps = {
@@ -21,6 +21,8 @@ export function ActivityItem({ event }: ActivityItemProps) {
           <UserLink userId={event.actor.id}>{event.actor.username} </UserLink>
         </span>
         {renderEventText(event)}
+        <br />
+        <span className="text-text-primary-700 text-xs">{formatRelativeTime(event.createdAt)}</span>
       </p>
     </article>
   );
