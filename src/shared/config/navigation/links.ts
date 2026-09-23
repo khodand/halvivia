@@ -20,6 +20,12 @@ export const NAVIGATION_LINKS = {
     href: ROUTES.LIBRARY,
   },
 
+  GAMES: {
+    id: 'games',
+    label: 'Игротека',
+    href: ROUTES.GAMES,
+  },
+
   TERMS: {
     id: 'terms',
     label: 'Пользовательское соглашение',

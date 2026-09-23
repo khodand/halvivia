@@ -11,6 +11,8 @@ export const ROUTES = {
   REVIEWS: '/reviews',
   DOWNLOADS: '/downloads',
   FILM_PAGE: '/cinema/film/',
+  GAMES: '/games',
+  GAME_PAGE: '/games/',
 } as const;
 
 // type Route = "/" | "/cinema" | "/library" | "/terms" | "/privacy"

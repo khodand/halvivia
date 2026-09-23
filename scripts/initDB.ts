@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { createEventsTable } from './initSchema';
+import { allowGameActivitySubject, createGamesTable } from './initSchema';
 
 async function main() {
-  await createEventsTable();
+  await createGamesTable();
+  await allowGameActivitySubject();
 }
 
 const isDirectRun =

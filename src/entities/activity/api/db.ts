@@ -83,16 +83,19 @@ export async function getRecentActivity(limit = 30) {
              CASE
                  WHEN ae.subject_type = 'film' THEN f.name_ru
                  WHEN ae.subject_type = 'book' THEN b.title
+                 WHEN ae.subject_type = 'game' THEN g.name
                  END      AS subject_title,
 
              CASE
-                 WHEN ae.subject_type = 'film' THEN f.description
-                 WHEN ae.subject_type = 'book' THEN b.description
+                 WHEN ae.subject_type = 'film' THEN COALESCE(f.description, '')
+                 WHEN ae.subject_type = 'book' THEN COALESCE(b.description, '')
+                 WHEN ae.subject_type = 'game' THEN ''
                  END      AS subject_slug,
 
              CASE
                  WHEN ae.subject_type = 'film' THEN f.cover_url
                  WHEN ae.subject_type = 'book' THEN b.thumbnail_url
+                 WHEN ae.subject_type = 'game' THEN NULL
                  END      AS subject_image
 
       FROM activity_events ae
@@ -108,11 +111,17 @@ export async function getRecentActivity(limit = 30) {
                          ON ae.subject_type = 'book'
                              AND ae.subject_id = b.id
 
+               LEFT JOIN games g
+                         ON ae.subject_type = 'game'
+                             AND ae.subject_id = g.id
+
       WHERE ae.visibility = 'public'
         AND (
           (ae.subject_type = 'film' AND f.id IS NOT NULL)
               OR
           (ae.subject_type = 'book' AND b.id IS NOT NULL)
+              OR
+          (ae.subject_type = 'game' AND g.id IS NOT NULL)
           )
         
       ORDER BY ae.created_at DESC,

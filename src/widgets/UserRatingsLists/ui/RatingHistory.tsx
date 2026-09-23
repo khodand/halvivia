@@ -8,24 +8,34 @@ import { RatingHistoryChart } from './RatingHistoryChart';
 import {
   mapBooksToRatingChartItems,
   mapFilmsToRatingChartItems,
+  mapGamesToRatingChartItems,
 } from '@/widgets/UserRatingsLists/model/mappers';
 
 import {
   BookWithUserRating,
   FilmWithUserRating,
+  GameWithUserRating,
   RatingHistoryPage,
 } from '@/widgets/UserRatingsLists/model/types';
 
 import { Pagination } from '@/shared/ui/pagination/pagination';
 
-type Tab = 'books' | 'films';
+type Tab = 'books' | 'films' | 'games';
+
+const tabs = [
+  { id: 'books', label: 'Книги', pageKey: 'booksPage' },
+  { id: 'films', label: 'Фильмы', pageKey: 'filmsPage' },
+  { id: 'games', label: 'Игры', pageKey: 'gamesPage' },
+] as const satisfies readonly { id: Tab; label: string; pageKey: string }[];
 
 type RatingHistoryProps = {
   books: RatingHistoryPage<BookWithUserRating>;
   films: RatingHistoryPage<FilmWithUserRating>;
+  games: RatingHistoryPage<GameWithUserRating>;
 
   booksPage: number;
   filmsPage: number;
+  gamesPage: number;
 
   pageSize?: number;
 };
@@ -33,8 +43,10 @@ type RatingHistoryProps = {
 export function RatingHistory({
   books,
   films,
+  games,
   booksPage,
   filmsPage,
+  gamesPage,
   pageSize = 20,
 }: RatingHistoryProps) {
   const router = useRouter();
@@ -43,26 +55,35 @@ export function RatingHistory({
 
   const [tab, setTab] = useState<Tab>('books');
 
-  const isBooks = tab === 'books';
+  const pages = {
+    books: booksPage,
+    films: filmsPage,
+    games: gamesPage,
+  } as const;
 
-  const data = isBooks ? books : films;
+  const lists = {
+    books,
+    films,
+    games,
+  } as const;
 
-  const page = isBooks ? booksPage : filmsPage;
+  const data = lists[tab];
+  const page = pages[tab];
 
-  const chartItems = isBooks
-    ? mapBooksToRatingChartItems(books.items)
-    : mapFilmsToRatingChartItems(films.items);
+  const chartItems =
+    tab === 'books'
+      ? mapBooksToRatingChartItems(books.items)
+      : tab === 'films'
+        ? mapFilmsToRatingChartItems(films.items)
+        : mapGamesToRatingChartItems(games.items);
 
   const handlePageChange = (nextPage: number) => {
     const params = new URLSearchParams(searchParams?.toString() ?? '');
+    const pageKey = tabs.find((item) => item.id === tab)?.pageKey ?? 'booksPage';
 
-    params.set(isBooks ? 'booksPage' : 'filmsPage', String(nextPage));
+    params.set(pageKey, String(nextPage));
 
     router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const handleTabChange = (nextTab: Tab) => {
-    setTab(nextTab);
   };
 
   const from = data.totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -81,25 +102,20 @@ export function RatingHistory({
 
         {/* Books / Films */}
         <div className="inline-flex w-fit rounded-lg bg-slate-100 p-1">
-          <button
-            type="button"
-            onClick={() => handleTabChange('books')}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-              isBooks ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            } `}
-          >
-            Книги
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTabChange('films')}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition ${
-              !isBooks ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-900'
-            } `}
-          >
-            Фильмы
-          </button>
+          {tabs.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setTab(item.id)}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                tab === item.id
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              } `}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 

@@ -19,6 +19,7 @@ export type UserPageProps = {
     page?: string;
     booksPage?: string;
     filmsPage?: string;
+    gamesPage?: string;
   }>;
 };
 

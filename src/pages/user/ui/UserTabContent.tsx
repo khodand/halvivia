@@ -13,6 +13,7 @@ type UserTabContentProps = {
     page?: string;
     booksPage?: string;
     filmsPage?: string;
+    gamesPage?: string;
   };
 };
 

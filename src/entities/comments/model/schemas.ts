@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const CommentEntityTypeSchema = z.enum(['film', 'book']);
+export const CommentEntityTypeSchema = z.enum(['film', 'book', 'game']);
 
 export const CreateCommentSchema = z.object({
   content: z.string().min(2).max(5000),

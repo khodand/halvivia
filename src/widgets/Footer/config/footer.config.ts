@@ -26,7 +26,7 @@ export const FOOTER_SECTIONS = [
   {
     id: 'sections',
     title: 'Разделы',
-    links: [NAVIGATION_LINKS.CINEMA, NAVIGATION_LINKS.LIBRARY],
+    links: [NAVIGATION_LINKS.CINEMA, NAVIGATION_LINKS.LIBRARY, NAVIGATION_LINKS.GAMES],
   },
   {
     id: 'important',

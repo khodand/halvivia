@@ -7,6 +7,26 @@ const nextConfig: NextConfig = {
       new URL('https://i.pinimg.com/**'),
       new URL('https://books.google.com/**'),
       new URL('https://covers.openlibrary.org/**'),
+      {
+        protocol: 'https',
+        hostname: 'shared.akamai.steamstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'store.akamai.steamstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.akamai.steamstatic.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.cloudflare.steamstatic.com',
+        pathname: '/**',
+      },
       new URL(`https://${process.env.NEXT_PUBLIC_BLOB_ID}.public.blob.vercel-storage.com/**`),
       new URL(`https://ik.imagekit.io/${process.env.NEXT_PUBLIC_IMAGEKIT_ID}/**`),
     ],
