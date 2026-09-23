@@ -36,4 +36,15 @@ export const menuSections: MenuSection[] = [
       },
     ],
   },
+  {
+    title: 'Игротека',
+    href: ROUTES.GAMES,
+    items: [
+      {
+        title: 'Добавить игру',
+        href: ROUTES.GAMES,
+        icon: 'AddIcon',
+      },
+    ],
+  },
 ];

@@ -2,8 +2,7 @@ import Link from 'next/link';
 
 import type { RatingChartItem } from '../model/types';
 import { RatingItemPoster } from './RatingItemPoster';
-import { getBookRefById } from '@/entities/books/utils';
-import { getFilmRefById } from '@/entities/films/lib/utils';
+import { getSubjectRef } from '@/shared/lib/utils';
 
 type RatingItemProps = {
   item: RatingChartItem;
@@ -30,7 +29,7 @@ export function RatingItem({ item, showDetails = true }: RatingItemProps) {
     month: 'short',
     year: 'numeric',
   });
-  const itemRef = item.type === 'book' ? getBookRefById(item.id) : getFilmRefById(item.id);
+  const itemRef = getSubjectRef({ type: item.type, id: item.id });
   return (
     <div>
       <div className="flex gap-3">

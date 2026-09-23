@@ -23,6 +23,19 @@ export function RatingItemPoster({ item }: RatingItemPosterProps) {
     );
   }
 
+  if (item.type === 'game') {
+    return (
+      <img
+        src={item.posterUrl}
+        alt={item.title}
+        className="h-14 w-30 shrink-0 rounded-md object-cover"
+        width={120}
+        height={56}
+        loading="lazy"
+      />
+    );
+  }
+
   return (
     <img
       src={item.posterUrl}

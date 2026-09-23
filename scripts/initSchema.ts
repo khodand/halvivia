@@ -380,7 +380,7 @@ export async function createEventsTable() {
                                    event_type TEXT NOT NULL,
 
                                    subject_type TEXT NOT NULL
-                                     CHECK (subject_type IN ('film', 'book')),
+                                     CHECK (subject_type IN ('film', 'book', 'game')),
 
                                    subject_id UUID NOT NULL,
 
@@ -411,5 +411,140 @@ export async function createEventsTable() {
                           subject_id,
                           created_at DESC
         );
+  `;
+}
+
+export async function createGamesTable() {
+  await sql`CREATE EXTENSION IF NOT EXISTS pgcrypto;`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS games (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      steam_app_id INTEGER NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      steam_url TEXT NOT NULL,
+      header_image TEXT,
+      short_description TEXT,
+      developers TEXT[] NOT NULL DEFAULT '{}',
+      publishers TEXT[] NOT NULL DEFAULT '{}',
+      release_date TEXT,
+      recent_review_label TEXT,
+      recent_review_count INTEGER,
+      recent_review_score INTEGER,
+      russian_review_label TEXT,
+      russian_review_count INTEGER,
+      russian_review_score INTEGER,
+      created_by_user_id UUID,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      rating_sum INTEGER NOT NULL DEFAULT 0,
+      rating_count INTEGER NOT NULL DEFAULT 0,
+      rating_avg NUMERIC(3,2)
+    );
+  `;
+
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS header_image TEXT;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS short_description TEXT;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS developers TEXT[] NOT NULL DEFAULT '{}';`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS publishers TEXT[] NOT NULL DEFAULT '{}';`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS release_date TEXT;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS recent_review_label TEXT;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS recent_review_count INTEGER;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS recent_review_score INTEGER;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS russian_review_label TEXT;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS russian_review_count INTEGER;`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS russian_review_score INTEGER;`;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS games_created_at_idx
+      ON games (created_at DESC);
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS games_rating_avg_idx
+      ON games (rating_avg DESC);
+  `;
+
+  await sql`
+    DO $$
+    BEGIN
+      IF to_regclass('public.users') IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM pg_constraint
+          WHERE conname = 'games_created_by_user_id_fkey'
+        )
+      THEN
+        ALTER TABLE games
+          ADD CONSTRAINT games_created_by_user_id_fkey
+          FOREIGN KEY (created_by_user_id)
+          REFERENCES users(id)
+          ON DELETE SET NULL
+          NOT VALID;
+      END IF;
+    END
+    $$;
+  `;
+}
+
+export async function addHalvaScoreColumns() {
+  await sql`
+    ALTER TABLE films
+    ADD COLUMN IF NOT EXISTS halva_score NUMERIC
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS films_halva_score_idx
+    ON films (halva_score DESC)
+  `;
+
+  await sql`
+    ALTER TABLE books
+    ADD COLUMN IF NOT EXISTS halva_score NUMERIC
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS books_halva_score_idx
+    ON books (halva_score DESC)
+  `;
+
+  await sql`
+    ALTER TABLE games
+    ADD COLUMN IF NOT EXISTS halva_score NUMERIC
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS games_halva_score_idx
+    ON games (halva_score DESC)
+  `;
+}
+
+export async function allowGameActivitySubject() {
+  await sql`
+    DO $$
+    DECLARE
+      constraint_name text;
+    BEGIN
+      IF to_regclass('public.activity_events') IS NULL THEN
+        RETURN;
+      END IF;
+
+      FOR constraint_name IN
+        SELECT con.conname
+        FROM pg_constraint con
+        JOIN pg_class rel ON rel.oid = con.conrelid
+        JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
+        WHERE nsp.nspname = 'public'
+          AND rel.relname = 'activity_events'
+          AND con.contype = 'c'
+          AND pg_get_constraintdef(con.oid) ILIKE '%subject_type%'
+      LOOP
+        EXECUTE format('ALTER TABLE activity_events DROP CONSTRAINT %I', constraint_name);
+      END LOOP;
+
+      ALTER TABLE activity_events
+        ADD CONSTRAINT activity_events_subject_type_check
+        CHECK (subject_type IN ('film', 'book', 'game'));
+    END
+    $$;
   `;
 }

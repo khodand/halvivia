@@ -1,6 +1,7 @@
 import {
   BookWithUserRating,
   FilmWithUserRating,
+  GameWithUserRating,
   RatingChartItem,
 } from '@/widgets/UserRatingsLists/model/types';
 
@@ -57,4 +58,24 @@ export function mapBooksToRatingChartItems(books: BookWithUserRating[]): RatingC
 
 export function mapFilmsToRatingChartItems(films: FilmWithUserRating[]): RatingChartItem[] {
   return films.map(mapFilmToRatingChartItem);
+}
+
+export function mapGameToRatingChartItem(game: GameWithUserRating): RatingChartItem {
+  return {
+    id: game.id,
+    title: game.name,
+    posterUrl: game.headerImage,
+    type: 'game',
+    rating: game.userRating,
+    ratedAt: game.userRatingCreatedAt,
+    meta:
+      [game.releaseDate, game.developers.length > 0 ? game.developers.join(', ') : null]
+        .filter(Boolean)
+        .join(' · ') || null,
+    description: game.shortDescription,
+  };
+}
+
+export function mapGamesToRatingChartItems(games: GameWithUserRating[]): RatingChartItem[] {
+  return games.map(mapGameToRatingChartItem);
 }

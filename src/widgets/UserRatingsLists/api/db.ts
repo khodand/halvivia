@@ -1,7 +1,12 @@
 import 'server-only';
 import { sql } from '@/shared/lib/db';
-import { BookWithUserRating, FilmWithUserRating } from '@/widgets/UserRatingsLists/model/types';
+import {
+  BookWithUserRating,
+  FilmWithUserRating,
+  GameWithUserRating,
+} from '@/widgets/UserRatingsLists/model/types';
 import { DbBook, mapDbBook } from '@/entities/books/model/mappers';
+import { DbGame, mapDbGame } from '@/entities/games/model/mappers';
 import { RatingValue } from '@/entities/rating/model/types';
 import { DbFilm } from '@/entities/films/model/types';
 import { mapDbFilmToFilmWithoutGenres } from '@/entities/films/model/mappers';
@@ -121,6 +126,70 @@ export async function getUserFilmsWithRating(
 
     return {
       ...mapDbFilmToFilmWithoutGenres(filmFields),
+      userRating: user_rating,
+      userRatingCreatedAt: user_rating_created_at,
+    };
+  });
+
+  const totalCount = Number(countRows[0].total_count);
+
+  return {
+    items,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+  };
+}
+
+export async function getUserGamesWithRating(
+  userId: string,
+  page = 1,
+  limit = 20,
+): Promise<{
+  items: GameWithUserRating[];
+  totalPages: number;
+  totalCount: number;
+}> {
+  'use cache';
+
+  cacheLife('minutes');
+  cacheTag(`user:${userId}:ratings`);
+
+  const offset = (page - 1) * limit;
+
+  const [rows, countRows] = await Promise.all([
+    sql`
+      SELECT
+        g.*,
+        r.rating AS user_rating,
+        r.created_at AS user_rating_created_at
+      FROM games g
+             INNER JOIN ratings r
+                        ON r.subject_id = g.id
+                          AND r.subject_type = 'game'
+                          AND r.user_id = ${userId}
+      ORDER BY r.created_at DESC
+      LIMIT ${limit}
+        OFFSET ${offset}
+    `,
+
+    sql`
+      SELECT COUNT(*) AS total_count
+      FROM ratings r
+      WHERE r.subject_type = 'game'
+        AND r.user_id = ${userId}
+    `,
+  ]);
+
+  const items = (
+    rows as (DbGame & {
+      user_rating: RatingValue;
+      user_rating_created_at: string;
+    })[]
+  ).map((row) => {
+    const { user_rating, user_rating_created_at, ...gameFields } = row;
+
+    return {
+      ...mapDbGame(gameFields),
       userRating: user_rating,
       userRatingCreatedAt: user_rating_created_at,
     };

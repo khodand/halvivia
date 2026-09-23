@@ -1,8 +1,10 @@
 import 'dotenv/config';
-import { createEventsTable } from './initSchema';
+import { addHalvaScoreColumns, allowGameActivitySubject, createGamesTable } from './initSchema';
 
 async function main() {
-  await createEventsTable();
+  await createGamesTable();
+  await allowGameActivitySubject();
+  await addHalvaScoreColumns();
 }
 
 const isDirectRun =

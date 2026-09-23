@@ -15,6 +15,9 @@ export function getSubjectRef(subject: Subject) {
     case 'film': {
       return ROUTES.FILM_PAGE + `${subject.id}`;
     }
+    case 'game': {
+      return ROUTES.GAME_PAGE + `${subject.id}`;
+    }
   }
 }
 

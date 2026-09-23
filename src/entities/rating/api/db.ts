@@ -3,6 +3,13 @@ import 'server-only';
 import { sql, pool } from '@/shared/lib/db';
 import { DbRating, DbRatingWithUser } from '@/entities/rating/model/types';
 import { Subject } from '@/shared/model';
+import { SubjectType } from '@/shared/model/subject/types';
+
+const RATING_TABLE_BY_SUBJECT = {
+  film: 'films',
+  book: 'books',
+  game: 'games',
+} as const satisfies Record<SubjectType, string>;
 
 export async function upsertRating({
   userId,
@@ -12,19 +19,19 @@ export async function upsertRating({
 }: {
   userId: string;
   subjectId: string;
-  subjectType: 'film' | 'book';
+  subjectType: SubjectType;
   newRating: number;
 }) {
   const client = await pool.connect();
+  const table = RATING_TABLE_BY_SUBJECT[subjectType];
 
   try {
     await client.query('BEGIN');
 
-    // 1. блокируем сущность (film/book)
     const { rows: subjectRows } = await client.query(
       `
       SELECT rating_sum, rating_count
-      FROM ${subjectType === 'film' ? 'films' : 'books'}
+      FROM ${table}
       WHERE id = $1
       FOR UPDATE
       `,
@@ -79,11 +86,12 @@ export async function upsertRating({
     // 5. обновляем сущность
     await client.query(
       `
-      UPDATE ${subjectType === 'film' ? 'films' : 'books'}
+      UPDATE ${table}
       SET
         rating_sum = $1,
         rating_count = $2,
-        rating_avg = $3
+        rating_avg = $3,
+        halva_score = ABS($1::numeric / NULLIF($2, 0)) * $1
       WHERE id = $4
       `,
       [ratingSum, ratingCount, ratingAvg, subjectId],
