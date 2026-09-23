@@ -20,7 +20,10 @@ export function ActivityDropdownClient({ children }: ActivityDropdownClientProps
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="bg-bg-surface w-[380px] p-0">
+      <DropdownMenuContent
+        align="end"
+        className="bg-bg-base mt-5 w-screen rounded-t-none p-0 md:w-[339px] lg:mt-7"
+      >
         {children}
       </DropdownMenuContent>
     </DropdownMenu>

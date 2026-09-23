@@ -11,14 +11,17 @@ type ActivityItemProps = {
 
 export function ActivityItem({ event }: ActivityItemProps) {
   return (
-    <article className="flex items-center gap-2 py-3">
-      <UserLink userId={event.actor.id} className="flex shrink-0 items-center gap-2">
-        <UserAvatarMini className="h-6 w-6 md:h-8 md:w-8" avatarUrl={event.actor.avatarUrl} />
-
-        <span className="text-primary font-medium">{event.actor.username}</span>
+    <article className="flex items-start gap-2">
+      <UserLink userId={event.actor.id} className="shrink-0">
+        <UserAvatarMini className="h-12 w-12 border-0" avatarUrl={event.actor.avatarUrl} />
       </UserLink>
 
-      <span className="text-muted-foreground">{renderEventText(event)}</span>
+      <p className="text-muted-foreground">
+        <span className="text-primary font-medium hover:underline">
+          <UserLink userId={event.actor.id}>{event.actor.username} </UserLink>
+        </span>
+        {renderEventText(event)}
+      </p>
     </article>
   );
 }
@@ -27,8 +30,12 @@ function renderEventText(event: ActivityFeedItem) {
   const subjectHref = getSubjectRef(event.subject);
 
   const subjectLink = (
-    <Link href={subjectHref} className="font-medium hover:underline">
-      {event.subject.title}
+    <Link href={subjectHref} className="text-text-primary-700 font-medium hover:underline">
+      {`"${
+        event.subject.title.length > 30
+          ? event.subject.title.slice(0, 30) + '...'
+          : event.subject.title
+      }"`}
     </Link>
   );
 
@@ -53,10 +60,10 @@ function renderEventText(event: ActivityFeedItem) {
       if (parentCommentId) {
         return (
           <>
-            ответил на комментарий к {subjectLink}
+            ответил на комментарий к {subjectLink}:<br />
             {commentPreview && (
               <>
-                : <span className="text-muted-foreground">«{commentPreview}»</span>
+                <span className="text-muted-foreground text-sm">«{commentPreview}»</span>
               </>
             )}
           </>
@@ -65,10 +72,10 @@ function renderEventText(event: ActivityFeedItem) {
 
       return (
         <>
-          прокомментировал {subjectLink}
+          оставил комментарий к {subjectLink}:<br />
           {commentPreview && (
             <>
-              : <span className="text-muted-foreground">«{commentPreview}»</span>
+              <span className="text-muted-foreground text-sm">«{commentPreview}»</span>
             </>
           )}
         </>

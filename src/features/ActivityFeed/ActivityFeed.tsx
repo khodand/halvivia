@@ -30,12 +30,12 @@ export async function ActivityFeed({ limit = 25 }: ActivityFeedProps) {
   }
 
   return (
-    <div className="max-h-[500px] overflow-y-auto">
-      <div className="border-border-default px-4 py-3">
-        <h2 className="text-sm font-semibold">Последняя активность</h2>
+    <div className="max-h-screen overflow-y-auto md:max-h-[457px]">
+      <div className="border-border-default border px-4 py-4">
+        <h2 className="text-sm font-semibold">Уведомления</h2>
       </div>
 
-      <div className="divide-border-default divide-y">
+      <div className="flex flex-col gap-5 px-4 py-4">
         {events.map((event) => (
           <ActivityItem key={event.id} event={event} />
         ))}
