@@ -91,10 +91,11 @@ export async function upsertRating({
         rating_sum = $1,
         rating_count = $2,
         rating_avg = $3,
-        halva_score = ABS($1::numeric / NULLIF($2, 0)) * $1
+        -- $5 repeats the sum: casting $1 to numeric clashes with integer rating_sum (42P08).
+        halva_score = ABS($5::numeric / NULLIF($2, 0)) * $5
       WHERE id = $4
       `,
-      [ratingSum, ratingCount, ratingAvg, subjectId],
+      [ratingSum, ratingCount, ratingAvg, subjectId, ratingSum],
     );
 
     await client.query('COMMIT');
