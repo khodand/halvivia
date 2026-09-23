@@ -1,27 +1,54 @@
 import 'server-only';
 
+import { GAME_SORT_MAP, GAMES_PAGE_SIZE } from '@/entities/games/model/constants';
 import { mapDbGame } from '@/entities/games/model/mappers';
+import type { GameListFilters } from '@/entities/games/model/schemas';
 import type { Game, NewGameInput } from '@/entities/games/model/types';
 import { isPgError, pool } from '@/shared/lib/db';
 
 const UNIQUE_VIOLATION_CODE = '23505';
 
-export async function getGames(limit: number): Promise<Game[]> {
-  const { rows } = await pool.query(
-    `
-    SELECT *
-    FROM games
-    ORDER BY created_at DESC
-    LIMIT $1
-  `,
-    [limit],
-  );
-
-  return rows.map(mapDbGame);
+function escapeLike(value: string) {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
 }
 
-export async function getRecentGames(limit: number): Promise<Game[]> {
-  return getGames(limit);
+export async function listGames(
+  filters: GameListFilters,
+): Promise<{ games: Game[]; totalCount: number }> {
+  const values: unknown[] = [];
+  let whereSql = '';
+
+  if (filters.search) {
+    values.push(`%${escapeLike(filters.search)}%`);
+    whereSql = `WHERE name ILIKE $1 ESCAPE '\\'`;
+  }
+
+  const orderBy = GAME_SORT_MAP[filters.sort];
+  const offset = (filters.page - 1) * GAMES_PAGE_SIZE;
+  const pageValues = [...values, GAMES_PAGE_SIZE, offset];
+
+  const [countResult, pageResult] = await Promise.all([
+    pool.query<{ total_count: number }>(
+      `SELECT COUNT(*)::int AS total_count FROM games ${whereSql}`,
+      values,
+    ),
+    pool.query(
+      `
+      SELECT *
+      FROM games
+      ${whereSql}
+      ORDER BY ${orderBy}
+      LIMIT $${values.length + 1}
+      OFFSET $${values.length + 2}
+    `,
+      pageValues,
+    ),
+  ]);
+
+  return {
+    games: pageResult.rows.map(mapDbGame),
+    totalCount: Number(countResult.rows[0]?.total_count ?? 0),
+  };
 }
 
 export async function getGameById(id: string): Promise<Game | null> {

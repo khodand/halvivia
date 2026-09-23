@@ -1,26 +1,20 @@
-import { getGames, getRecentGames } from '@/entities/games/api/db';
+import { listGames } from '@/entities/games/api/db';
+import type { GameListFilters } from '@/entities/games/model/schemas';
 import type { Game } from '@/entities/games/model/types';
 import { verifySession } from '@/shared/lib/auth';
 
-const RECENT_GAMES_LIMIT = 10;
-const GAMES_LIMIT = 80;
-
 export type GamesPageViewModel = {
-  recentGames: Game[];
   games: Game[];
+  totalCount: number;
   canAddGames: boolean;
 };
 
-export async function getGamesPageViewModel(): Promise<GamesPageViewModel> {
-  const [recentGames, games, session] = await Promise.all([
-    getRecentGames(RECENT_GAMES_LIMIT),
-    getGames(GAMES_LIMIT),
-    verifySession(),
-  ]);
+export async function getGamesPageViewModel(filters: GameListFilters): Promise<GamesPageViewModel> {
+  const [catalog, session] = await Promise.all([listGames(filters), verifySession()]);
 
   return {
-    recentGames,
-    games,
+    games: catalog.games,
+    totalCount: catalog.totalCount,
     canAddGames: session.status !== 'unauthenticated' && session.payload.role === 'MEMBER',
   };
 }
