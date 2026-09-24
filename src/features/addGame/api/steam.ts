@@ -6,8 +6,13 @@ import type { SteamGameSearchHit } from '@/features/addGame/model/types';
 import { z } from 'zod';
 
 const STORE_SEARCH_URL = 'https://store.steampowered.com/api/storesearch/';
+const STORE_BROWSE_URL = 'https://api.steampowered.com/IStoreBrowseService/GetItems/v1/';
 const APP_DETAILS_URL = 'https://store.steampowered.com/api/appdetails';
 const SEARCH_RESULTS_LIMIT = 12;
+// Store browse type: 0 game, 1 demo, 4 DLC, 6 software, 11 music.
+const GAME_APP_TYPE = 0;
+// The RU catalog omits type for region-locked apps. US still returns it.
+const STORE_BROWSE_COUNTRY = 'US';
 const REQUEST_TIMEOUT_MS = 15000;
 const RECENT_REVIEW_WINDOW_SEC = 30 * 24 * 60 * 60;
 
@@ -30,6 +35,33 @@ const storeSearchSchema = z
   })
   .passthrough();
 
+const storeBrowseSchema = z
+  .object({
+    response: z
+      .object({
+        store_items: z
+          .array(
+            z
+              .object({
+                appid: z.number(),
+                type: z.number().optional(),
+                success: z.number(),
+                release: z
+                  .object({
+                    steam_release_date: z.number().optional(),
+                  })
+                  .passthrough()
+                  .optional(),
+              })
+              .passthrough(),
+          )
+          .optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
 const appDetailsSchema = z
   .object({
     success: z.boolean(),
@@ -47,6 +79,7 @@ const appDetailsSchema = z
             date: z.string().optional(),
           })
           .optional(),
+        steam_appid: z.number().optional(),
       })
       .passthrough()
       .optional(),
@@ -169,6 +202,54 @@ async function fetchReviewSummary(steamAppId: number, kind: 'recent' | 'russian'
   return toStoredReview(await fetchJson(url.toString()));
 }
 
+function releaseYearFromUnix(timestamp: number | undefined) {
+  if (timestamp == null || !Number.isFinite(timestamp) || timestamp <= 0) {
+    return null;
+  }
+
+  const year = new Date(timestamp * 1000).getUTCFullYear();
+
+  return Number.isInteger(year) ? year : null;
+}
+
+async function fetchStoreItems(appIds: number[], countryCode: string) {
+  const url = new URL(STORE_BROWSE_URL);
+  url.searchParams.set(
+    'input_json',
+    JSON.stringify({
+      ids: appIds.map((appid) => ({ appid })),
+      context: { language: 'russian', country_code: countryCode, steam_realm: 1 },
+      data_request: { include_release: true },
+    }),
+  );
+
+  const parsed = storeBrowseSchema.parse(await fetchJson(url.toString()));
+
+  return parsed.response?.store_items ?? [];
+}
+
+async function fetchGameReleaseYears(appIds: number[]) {
+  const items = await fetchStoreItems(appIds, STORE_BROWSE_COUNTRY);
+  const byAppId = new Map(items.map((item) => [item.appid, item]));
+  const releaseYears = new Map<number, number | null>();
+
+  for (const appId of appIds) {
+    const item = byAppId.get(appId);
+    const classified = item?.success === 1 && item.type != null;
+
+    if (classified && item.type !== GAME_APP_TYPE) {
+      continue;
+    }
+
+    releaseYears.set(
+      appId,
+      classified ? releaseYearFromUnix(item.release?.steam_release_date) : null,
+    );
+  }
+
+  return releaseYears;
+}
+
 export async function searchSteamGames(query: string): Promise<SteamGameSearchHit[]> {
   const url = new URL(STORE_SEARCH_URL);
   url.searchParams.set('term', query);
@@ -176,13 +257,25 @@ export async function searchSteamGames(query: string): Promise<SteamGameSearchHi
   url.searchParams.set('cc', 'ru');
 
   const parsed = storeSearchSchema.parse(await fetchJson(url.toString()));
-
-  return (parsed.items ?? [])
+  const hits = (parsed.items ?? [])
     .filter((item) => item.type === 'app' && item.name.trim().length > 0)
-    .slice(0, SEARCH_RESULTS_LIMIT)
     .map((item) => ({
       steamAppId: item.id,
       name: item.name.trim(),
+    }));
+
+  if (hits.length === 0) {
+    return [];
+  }
+
+  const releaseYears = await fetchGameReleaseYears(hits.map((hit) => hit.steamAppId));
+
+  return hits
+    .filter((hit) => releaseYears.has(hit.steamAppId))
+    .slice(0, SEARCH_RESULTS_LIMIT)
+    .map((hit) => ({
+      ...hit,
+      releaseYear: releaseYears.get(hit.steamAppId) ?? null,
     }));
 }
 
@@ -191,13 +284,27 @@ export type SteamResolveResult =
   | { status: 'not_found' }
   | { status: 'not_game' };
 
+type AppDetailsPayload = Record<string, z.infer<typeof appDetailsSchema>>;
+
+// Steam keys appdetails by the last DLC id. Stardew Valley (413150) comes back
+// under 440820, while data.steam_appid is the app that was requested.
+function appDetailsEntry(payload: AppDetailsPayload, steamAppId: number) {
+  const direct = payload[String(steamAppId)];
+
+  if (direct) {
+    return direct;
+  }
+
+  return Object.values(payload).find((entry) => entry.data?.steam_appid === steamAppId);
+}
+
 export async function resolveSteamGame(steamAppId: number): Promise<SteamResolveResult> {
   const url = new URL(APP_DETAILS_URL);
   url.searchParams.set('appids', String(steamAppId));
   url.searchParams.set('l', 'russian');
 
   const payload = z.record(z.string(), appDetailsSchema).parse(await fetchJson(url.toString()));
-  const entry = payload[String(steamAppId)];
+  const entry = appDetailsEntry(payload, steamAppId);
 
   if (!entry?.success || !entry.data) {
     return { status: 'not_found' };
