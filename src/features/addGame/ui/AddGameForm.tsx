@@ -180,7 +180,7 @@ export function AddGameForm() {
                     isSelected ? 'bg-border-inverse-200/30' : 'hover:bg-border-inverse-200/20'
                   }`}
                 >
-                  {game.name}
+                  {game.releaseYear == null ? game.name : `${game.name} (${game.releaseYear})`}
                 </button>
               </li>
             );
