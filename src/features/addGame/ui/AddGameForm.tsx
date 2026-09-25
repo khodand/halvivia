@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Game } from '@/entities/games/model/types';
 import { AddedSubjectRating } from '@/entities/rating/ui/AddedSubjectRating';
 import { useCurrentUserStore } from '@/entities/user/model/currentUserStore';
@@ -14,7 +15,6 @@ import type { SteamGameSearchHit } from '@/features/addGame/model/types';
 import { ROUTES } from '@/shared/config';
 import { Button } from '@/shared/ui/Button';
 import Input from '@/shared/ui/Input/Input';
-import Link from 'next/link';
 
 const searchErrors = {
   UNAUTHORIZED: 'Добавлять игры могут только участники.',
@@ -29,26 +29,24 @@ const addErrors = {
   INVALID_URL: 'Нужна ссылка на страницу игры: store.steampowered.com/app/…',
   NOT_A_GAME: 'Это не игра. DLC, саундтреки и демо не добавляем.',
   GAME_NOT_FOUND: 'Steam не нашёл такую игру.',
-  GAME_ALREADY_EXISTS: 'Эта игра уже есть в игротеке.',
   RATE_LIMITED: 'Слишком много запросов. Попробуйте чуть позже.',
   ADD_FAILED: 'Не удалось сохранить игру.',
 } as const;
 
 export function AddGameForm() {
+  const router = useRouter();
   const userId = useCurrentUserStore((state) => state.currentUser?.id);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SteamGameSearchHit[]>([]);
   const [selectedAppId, setSelectedAppId] = useState<number | null>(null);
   const [steamUrl, setSteamUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [existingGameId, setExistingGameId] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [addedGame, setAddedGame] = useState<Game | null>(null);
 
   function resetMessages() {
     setErrorMessage(null);
-    setExistingGameId(null);
   }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -107,13 +105,17 @@ export function AddGameForm() {
   }
 
   function applyAddResult(result: Awaited<ReturnType<typeof addGameAction>>) {
-    if (result.success) {
+    if (result.success && result.created) {
       setAddedGame(result.game);
       return;
     }
 
+    if (result.success) {
+      router.push(`${ROUTES.GAME_PAGE}${result.gameId}`);
+      return;
+    }
+
     setErrorMessage(addErrors[result.error]);
-    setExistingGameId(result.gameId ?? null);
   }
 
   function handleAddAnother() {
@@ -222,14 +224,6 @@ export function AddGameForm() {
 
       {isSearching && <p className="text-text-inverse-500 text-sm">Ищем в Steam...</p>}
       {errorMessage && <p className="text-error text-sm">{errorMessage}</p>}
-      {existingGameId && (
-        <Link
-          href={`${ROUTES.GAME_PAGE}${existingGameId}`}
-          className="text-primary text-sm underline"
-        >
-          Открыть игру
-        </Link>
-      )}
     </div>
   );
 }

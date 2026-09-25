@@ -10,17 +10,6 @@ export function AddBookStatusMessage({ status }: AddBookStatusMessageProps) {
     return <p className="text-error text-sm">{status.message}</p>;
   }
 
-  if (status.type === 'duplicate') {
-    return (
-      <p className="text-sm">
-        Книга уже есть.{' '}
-        <Link className="text-primary font-semibold" href={`/library/${status.bookId}`}>
-          Открыть страницу
-        </Link>
-      </p>
-    );
-  }
-
   if (status.type === 'success') {
     return (
       <p className="text-success text-sm">

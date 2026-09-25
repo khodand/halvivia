@@ -3,7 +3,23 @@
 import { cacheLife } from 'next/cache';
 
 import { DbFilm, DbFilmWithGenres, DbGenre, Film } from '@/entities/films/model/types';
-import { pool, sql } from '@/shared/lib/db';
+import { isPgError, pool, sql } from '@/shared/lib/db';
+
+const UNIQUE_VIOLATION_CODE = '23505';
+
+export async function findFilmIdByKinopoiskId(kinopoiskId: number): Promise<string | null> {
+  const { rows } = await pool.query<{ id: string }>(
+    `
+    SELECT id
+    FROM films
+    WHERE kinopoisk_id = $1
+    LIMIT 1
+    `,
+    [kinopoiskId],
+  );
+
+  return rows[0]?.id ?? null;
+}
 
 export async function addFilm(film: Film): Promise<Film> {
   const client = await pool.connect();
@@ -123,6 +139,27 @@ export async function addFilm(film: Film): Promise<Film> {
     throw error;
   } finally {
     client.release();
+  }
+}
+
+export async function addFilmOrGetExisting(
+  film: Film,
+): Promise<{ created: true; film: Film } | { created: false; id: string }> {
+  try {
+    const createdFilm = await addFilm(film);
+    return { created: true, film: createdFilm };
+  } catch (error) {
+    if (!isPgError(error) || error.code !== UNIQUE_VIOLATION_CODE) {
+      throw error;
+    }
+
+    const existingId = await findFilmIdByKinopoiskId(film.kinopoiskId);
+
+    if (!existingId) {
+      throw error;
+    }
+
+    return { created: false, id: existingId };
   }
 }
 

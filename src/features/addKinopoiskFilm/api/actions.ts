@@ -8,10 +8,14 @@ import { revalidatePath } from 'next/cache';
 import { FilmSearchByKeywordResponseSchema } from '@/features/addKinopoiskFilm/model/schemas';
 import { FilmSearchByKeywordItem } from '@/features/addKinopoiskFilm/model/types';
 import { Film } from '@/entities/films/model/types';
-import { ActionResult } from '@/shared/model';
 import { tryCreateActivityEvent } from '@/entities/activity/api/queries';
 
-export async function addKinopoiskFilmAction(id: number): Promise<ActionResult<Film>> {
+export type AddKinopoiskFilmResult =
+  | { success: true; created: true; data: Film }
+  | { success: true; created: false; id: string }
+  | { success: false; error: 'UNAUTHORIZED' | 'DB_ERROR' };
+
+export async function addKinopoiskFilmAction(id: number): Promise<AddKinopoiskFilmResult> {
   const controller = new AbortController();
   const session = await withAuth();
 
@@ -25,19 +29,29 @@ export async function addKinopoiskFilmAction(id: number): Promise<ActionResult<F
 
   setTimeout(() => controller.abort(), 15000);
   try {
-    const film = await addFilmByKinopoiskId(id);
+    const result = await addFilmByKinopoiskId(id);
+
+    if (!result.created) {
+      return {
+        success: true,
+        created: false,
+        id: result.id,
+      };
+    }
+
     revalidatePath(ROUTES.CINEMA);
 
     await tryCreateActivityEvent({
       eventType: 'subject.created',
-      subject: { type: 'film', id: film.id },
+      subject: { type: 'film', id: result.film.id },
       actorId: session.payload.userId,
     });
 
     return {
       success: true,
-      data: film,
-    } as const;
+      created: true,
+      data: result.film,
+    };
   } catch (err) {
     console.error(err);
 

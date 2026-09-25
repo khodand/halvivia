@@ -4,11 +4,13 @@ import type { Book, BookSearchResultPreview, BookSectionId } from '@/entities/bo
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
+import { ROUTES } from '@/shared/config';
+
 import { addBookAction } from '../api/actions';
 import type { AddBookStatus } from './types';
 
 function getAddBookErrorMessage(
-  error: 'UNAUTHORIZED' | 'BOOK_ALREADY_EXISTS' | 'BOOK_NOT_FOUND' | 'RATE_LIMITED' | 'ADD_FAILED',
+  error: 'UNAUTHORIZED' | 'BOOK_NOT_FOUND' | 'RATE_LIMITED' | 'ADD_FAILED',
 ) {
   if (error === 'UNAUTHORIZED') {
     return 'Добавлять книги могут только участники сообщества';
@@ -16,10 +18,6 @@ function getAddBookErrorMessage(
 
   if (error === 'BOOK_NOT_FOUND') {
     return 'Не удалось получить данные книги';
-  }
-
-  if (error === 'BOOK_ALREADY_EXISTS') {
-    return 'Книга уже есть в библиотеке';
   }
 
   if (error === 'RATE_LIMITED') {
@@ -56,7 +54,7 @@ export function useAddBook() {
           sectionIds: selectedSections,
         });
 
-        if (response.success) {
+        if (response.success && response.created) {
           setStatus({
             type: 'success',
             message: 'Книга добавлена',
@@ -68,12 +66,8 @@ export function useAddBook() {
           return response.book;
         }
 
-        if (response.error === 'BOOK_ALREADY_EXISTS' && response.bookId) {
-          setStatus({
-            type: 'duplicate',
-            bookId: response.bookId,
-          });
-
+        if (response.success) {
+          router.push(`${ROUTES.LIBRARY}/${response.bookId}`);
           return null;
         }
 

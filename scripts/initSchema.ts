@@ -52,7 +52,7 @@ export async function createFilmsTable() {
     (
       id                          UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
 
-      kinopoisk_id                INTEGER     NOT NULL,
+      kinopoisk_id                INTEGER     NOT NULL UNIQUE,
       kinopoisk_hd_id             TEXT,
       imdb_id                     TEXT,
 
@@ -95,6 +95,20 @@ export async function createFilmsTable() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_films_created_at
       ON films (created_at DESC);
+  `;
+
+  await sql`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'films_kinopoisk_id_key'
+      ) THEN
+        ALTER TABLE films
+          ADD CONSTRAINT films_kinopoisk_id_key UNIQUE (kinopoisk_id);
+      END IF;
+    END $$;
   `;
 
   await sql`

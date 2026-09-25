@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { addFilm } from '@/entities/films/api/db';
+import { addFilmOrGetExisting, findFilmIdByKinopoiskId } from '@/entities/films/api/db';
 import {
   FilmSearchByKeywordResponse,
   KinopoiskFilm,
@@ -41,7 +41,15 @@ export async function getKinopoiskFilmById(id: number = 41519): Promise<Kinopois
 }
 
 //переделать через edge handlers? или перенести на клиент, но тогда будет больше перенаправлений или хотебя таймер сделать
-export async function addFilmByKinopoiskId(id: number): Promise<Film> {
+export async function addFilmByKinopoiskId(
+  id: number,
+): Promise<{ created: true; film: Film } | { created: false; id: string }> {
+  const existingId = await findFilmIdByKinopoiskId(id);
+
+  if (existingId) {
+    return { created: false, id: existingId };
+  }
+
   const kFilm = await getKinopoiskFilmById(id);
   const film = mapKinopoiskFilmToFilm(kFilm);
 
@@ -77,7 +85,7 @@ export async function addFilmByKinopoiskId(id: number): Promise<Film> {
     console.log('Не вышло загрузить широкий постер', coverResult.reason);
   }
 
-  return addFilm(film);
+  return addFilmOrGetExisting(film);
 }
 
 export async function searchFilmsByKeyword(keyword: string) {

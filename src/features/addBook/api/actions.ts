@@ -31,16 +31,11 @@ type SearchBooksResult =
     };
 
 type AddBookResult =
-  | { success: true; bookId: string; book: Book }
+  | { success: true; created: true; bookId: string; book: Book }
+  | { success: true; created: false; bookId: string }
   | {
       success: false;
-      error:
-        | 'UNAUTHORIZED'
-        | 'BOOK_ALREADY_EXISTS'
-        | 'BOOK_NOT_FOUND'
-        | 'RATE_LIMITED'
-        | 'ADD_FAILED';
-      bookId?: string;
+      error: 'UNAUTHORIZED' | 'BOOK_NOT_FOUND' | 'RATE_LIMITED' | 'ADD_FAILED';
     };
 
 function toBookSearchResultPreview(book: BookSearchResult): BookSearchResultPreview {
@@ -150,8 +145,8 @@ export async function addBookAction(input: AddBookSelectionInput): Promise<AddBo
 
     if (!created) {
       return {
-        success: false,
-        error: 'BOOK_ALREADY_EXISTS',
+        success: true,
+        created: false,
         bookId: book.id,
       };
     }
@@ -166,6 +161,7 @@ export async function addBookAction(input: AddBookSelectionInput): Promise<AddBo
 
     return {
       success: true,
+      created: true,
       bookId: book.id,
       book,
     };

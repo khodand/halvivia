@@ -25,7 +25,8 @@ type SearchGamesResult =
     };
 
 type AddGameResult =
-  | { success: true; gameId: string; game: Game }
+  | { success: true; created: true; gameId: string; game: Game }
+  | { success: true; created: false; gameId: string }
   | {
       success: false;
       error:
@@ -33,10 +34,8 @@ type AddGameResult =
         | 'INVALID_URL'
         | 'NOT_A_GAME'
         | 'GAME_NOT_FOUND'
-        | 'GAME_ALREADY_EXISTS'
         | 'RATE_LIMITED'
         | 'ADD_FAILED';
-      gameId?: string;
     };
 
 const SEARCH_QUERY_MAX_LENGTH = 120;
@@ -134,8 +133,8 @@ async function saveResolvedGame(steamAppId: number): Promise<AddGameResult> {
 
     if (!created) {
       return {
-        success: false,
-        error: 'GAME_ALREADY_EXISTS',
+        success: true,
+        created: false,
         gameId: game.id,
       };
     }
@@ -151,6 +150,7 @@ async function saveResolvedGame(steamAppId: number): Promise<AddGameResult> {
 
     return {
       success: true,
+      created: true,
       gameId: game.id,
       game,
     };

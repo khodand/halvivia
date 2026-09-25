@@ -3,6 +3,7 @@
 import Input from '@/shared/ui/Input/Input';
 import { Button } from '@/shared/ui/Button';
 import { ChangeEvent, useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
 
 import { addKinopoiskFilmAction } from '@/features/addKinopoiskFilm/api/actions';
@@ -27,10 +28,12 @@ export function parseKinopoiskFilmId(url: string): number | null {
 }
 
 export function KinopoiskForm() {
+  const router = useRouter();
   const [currentRef, setCurrentRef] = useState('');
   const [keyword, setKeyword] = useState('');
   const [isValidOrEmpty, setValidOrEmpty] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [addFailed, setAddFailed] = useState(false);
 
   const [addedFilm, setAddedFilm] = useState<Film | null>(null);
 
@@ -39,10 +42,18 @@ export function KinopoiskForm() {
   const userId = useCurrentUserStore((state) => state.currentUser?.id);
 
   const addFilm = (filmId: number) => {
+    setAddFailed(false);
+
     startTransition(async () => {
       const res = await addKinopoiskFilmAction(filmId);
 
-      if (!res.success || !res.data) {
+      if (!res.success) {
+        setAddFailed(true);
+        return;
+      }
+
+      if (!res.created) {
+        router.push(getFilmRefById(res.id));
         return;
       }
 
@@ -110,6 +121,7 @@ export function KinopoiskForm() {
 
   return (
     <form className="flex w-full min-w-100 flex-col gap-8 md:w-[22vw]">
+      {addFailed && <StatusBlock status={false} filmRef={null} />}
       <div className="relative flex w-full flex-col items-center gap-3.5 overflow-visible">
         <Input
           value={keyword}
